@@ -1,42 +1,42 @@
 function searchLexicon(query) {
-  if (query === 'master') {
-    var nodes = [];
-    async.waterfall([
-      function(callback) {
-        $.getJSON('/translate/lexicon', {
-          query: query,
-          source: 'en',
-          target: 'es'
-        }, function(response) {
-          if (response.translation.length <= 0) return callback("No results");
-          links = _.map(response.translation, function(translation) {
-            return { source: query, score: translation.score*translation.score, target: translation.translation };
-          });
-          callback(null, _.pluck(response.translation, 'translation'));
+  var links = [];
+  async.waterfall([
+    function(callback) {
+      $.getJSON('/translate/lexicon', {
+        query: query,
+        source: 'en',
+        target: 'es'
+      }, function(response) {
+        if (response.translation.length <= 0) return callback("No results");
+        links = _.map(response.translation, function(translation) {
+          return { source: query, score: translation.score*translation.score, target: translation.translation };
         });
-      },
-      function(queries, callback) {
-        async.map(queries, function(q, callback) {
-          $.getJSON('/translate/lexicon', {
-            query: q,
-            source: 'es',
-            target: 'en'
-          }, function(response) {
-            if (response.translation.length > 0) {
-              _.each(response.translation, function(translation) {
-                if (translation.translation !== query) {
-                  links.push({ target: q, score: translation.score*translation.score, source: translation.translation });
-                }
-              });
-            }
-            callback(null);
-          });
-        }, callback);
-      }
-    ], function(err) {
+        callback(null, _.pluck(response.translation, 'translation'));
+      });
+    },
+    function(queries, callback) {
+      async.map(queries, function(q, callback) {
+        $.getJSON('/translate/lexicon', {
+          query: q,
+          source: 'es',
+          target: 'en'
+        }, function(response) {
+          if (response.translation.length > 0) {
+            _.each(response.translation, function(translation) {
+              if (translation.translation !== query) {
+                links.push({ target: q, score: translation.score*translation.score, source: translation.translation });
+              }
+            });
+          }
+          callback(null);
+        });
+      }, callback);
+    }
+  ], function(err) {
+    if (links.length > 0) {
       drawChart(links)
-    });
-  }
+    }
+  });
 }
 
 function drawChart(links) {

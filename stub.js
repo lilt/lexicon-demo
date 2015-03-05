@@ -67,7 +67,7 @@ var data = {
 $.getJSON = function(path, params, callback) {
   var source = params['source'];
   var query = params['query'];
-  var response = { translation: data[source][query] };
+  var response = { translation: data[source][query] || [] };
   _.defer(function() {
     callback(response);
   });
