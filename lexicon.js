@@ -2,29 +2,31 @@ function searchLexicon(query) {
   var links = [];
   async.waterfall([
     function(callback) {
-      $.getJSON('/translate/lexicon', {
+      $.getJSON('http://beta.lilt.com/translate/lexicon', {
         query: query,
         source: 'en',
         target: 'es'
       }, function(response) {
         if (response.translations.length <= 0) return callback("No results");
-        links = _.map(response.translations, function(translation) {
-          return { source: query, score: translation.frequency*translation.frequency, target: translation.translation };
+        _.each(response.translations, function(translation) {
+          if (translation.frequency > 0) {
+            links.push({ source: query, score: translation.frequency*translation.frequency, target: translation.target });
+          }
         });
-        callback(null, _.pluck(response.translations, 'translation'));
+        callback(null, _.pluck(response.translations, 'target'));
       });
     },
     function(queries, callback) {
       async.map(queries, function(q, callback) {
-        $.getJSON('/translate/lexicon', {
+        $.getJSON('http://beta.lilt.com/translate/lexicon', {
           query: q,
           source: 'es',
           target: 'en'
         }, function(response) {
           if (response.translations.length > 0) {
             _.each(response.translations, function(translation) {
-              if (translation.translation !== query) {
-                links.push({ target: q, score: translation.frequency*translation.frequency, source: translation.translation });
+              if (translation.target !== query && translation.frequency > 0) {
+                links.push({ target: q, score: translation.frequency*translation.frequency, source: translation.target });
               }
             });
           }
@@ -83,8 +85,5 @@ $(document).ready(function() {
     select: function(event, ui) {
       searchLexicon(ui.item.value);
     }
-  });
-  $('#search').on('keyup', function() {
-    searchLexicon($('#search').val());
   });
 });
