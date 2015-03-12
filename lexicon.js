@@ -7,11 +7,11 @@ function searchLexicon(query) {
         source: 'en',
         target: 'es'
       }, function(response) {
-        if (response.translation.length <= 0) return callback("No results");
-        links = _.map(response.translation, function(translation) {
-          return { source: query, score: translation.score*translation.score, target: translation.translation };
+        if (response.translations.length <= 0) return callback("No results");
+        links = _.map(response.translations, function(translation) {
+          return { source: query, score: translation.frequency*translation.frequency, target: translation.translation };
         });
-        callback(null, _.pluck(response.translation, 'translation'));
+        callback(null, _.pluck(response.translations, 'translation'));
       });
     },
     function(queries, callback) {
@@ -21,10 +21,10 @@ function searchLexicon(query) {
           source: 'es',
           target: 'en'
         }, function(response) {
-          if (response.translation.length > 0) {
-            _.each(response.translation, function(translation) {
+          if (response.translations.length > 0) {
+            _.each(response.translations, function(translation) {
               if (translation.translation !== query) {
-                links.push({ target: q, score: translation.score*translation.score, source: translation.translation });
+                links.push({ target: q, score: translation.frequency*translation.frequency, source: translation.translation });
               }
             });
           }
